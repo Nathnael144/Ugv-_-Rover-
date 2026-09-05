@@ -93,6 +93,10 @@ class UGVRoverEmptyEnvCfg(DirectRLEnvCfg):
     rew_progress = 4.0
     rew_goal = 5.0
     rew_heading = 0.15
+    rew_forward_velocity = 0.20
+    rew_reverse_action = -0.25
+    rew_yaw_rate = -0.015
+    rew_unneeded_turn = -0.04
     rew_action_rate = -0.03
     rew_action_mag = -0.01
     rew_wall_margin = -0.25
@@ -159,6 +163,10 @@ class UGVRoverCityEnvCfg(UGVRoverEmptyEnvCfg):
     # City stage rewards: stronger clearance and termination pressure.
     rew_progress = 4.5
     rew_goal = 6.0
+    rew_forward_velocity = 0.28
+    rew_reverse_action = -0.35
+    rew_yaw_rate = -0.02
+    rew_unneeded_turn = -0.06
     rew_obstacle_margin = -0.60
     rew_terminated = -4.0
 

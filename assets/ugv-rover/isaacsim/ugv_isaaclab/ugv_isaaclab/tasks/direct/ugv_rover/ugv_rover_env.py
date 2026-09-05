@@ -244,8 +244,11 @@ class UGVRoverEmptyEnv(DirectRLEnv):
         root_pos = self.robot.data.root_pos_w.torch
         root_xy = root_pos[:, :2] - self.scene.env_origins[:, :2]
         root_quat = self.robot.data.root_quat_w.torch
+        root_lin_vel_b = self.robot.data.root_lin_vel_b.torch
+        root_ang_vel_b = self.robot.data.root_ang_vel_b.torch
         _, _, yaw = euler_xyz_from_quat(root_quat)
         front_yaw = self._front_yaw(yaw)
+        front_lin_vel_b = self._cad_to_front_body_xy(root_lin_vel_b[:, :2])
 
         goal_delta = self._goal_xy - root_xy
         distance = torch.linalg.norm(goal_delta, dim=-1)
@@ -260,6 +263,12 @@ class UGVRoverEmptyEnv(DirectRLEnv):
         obstacle_margin = self._obstacle_margin(root_xy)
         near_obstacle = (self.cfg.obstacle_safety_margin_m - obstacle_margin).clamp_min(0.0)
 
+        forward_speed = (front_lin_vel_b[:, 0] / self.cfg.max_linear_m_s).clamp(-1.0, 1.0)
+        reverse_action = (-self._actions[:, 0]).clamp_min(0.0)
+        reverse_allowed = (obstacle_margin < self.cfg.obstacle_safety_margin_m * 1.5).float()
+        reverse_penalty_scale = 1.0 - 0.75 * reverse_allowed
+        yaw_rate = torch.abs(root_ang_vel_b[:, 2]) / self.cfg.max_angular_rad_s
+        unneeded_turn = torch.abs(self._actions[:, 1]) * torch.cos(heading_error).clamp_min(0.0)
         action_rate = torch.sum(torch.square(self._actions - self._previous_actions), dim=-1)
         action_mag = torch.sum(torch.square(self._actions), dim=-1)
         reward = (
@@ -267,6 +276,10 @@ class UGVRoverEmptyEnv(DirectRLEnv):
             + self.cfg.rew_progress * progress
             + self.cfg.rew_heading * torch.cos(heading_error)
             + self.cfg.rew_goal * reached.float()
+            + self.cfg.rew_forward_velocity * forward_speed
+            + self.cfg.rew_reverse_action * reverse_action * reverse_penalty_scale
+            + self.cfg.rew_yaw_rate * yaw_rate
+            + self.cfg.rew_unneeded_turn * unneeded_turn
             + self.cfg.rew_action_rate * action_rate
             + self.cfg.rew_action_mag * action_mag
             + self.cfg.rew_wall_margin * near_wall
