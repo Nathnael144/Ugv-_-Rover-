@@ -1,115 +1,173 @@
-![GitHub top language](https://img.shields.io/github/languages/top/effectsmachine/ugv_rpi) ![GitHub language count](https://img.shields.io/github/languages/count/effectsmachine/ugv_rpi)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/effectsmachine/ugv_rpi)
-![GitHub repo size](https://img.shields.io/github/repo-size/effectsmachine/ugv_rpi) ![GitHub](https://img.shields.io/github/license/effectsmachine/ugv_rpi) ![GitHub last commit](https://img.shields.io/github/last-commit/effectsmachine/ugv_rpi)
+# UGV Rover Isaac Sim RL Project
 
-# Waveshare UGV Robots
-This is a Raspberry Pi example for the [Waveshare](https://www.waveshare.com/) UGV robots: **WAVE ROVER**, **UGV Rover**, **UGV Beast**, **RaspRover**, **UGV01**, **UGV02**.  
+This repository adapts the Waveshare UGV Rover platform for Isaac Sim and Isaac Lab reinforcement learning. The goal is to train a delivery-style ground robot in simulation, starting from a simple rectangular arena and gradually moving toward realistic city navigation before transferring the learned policy to real hardware.
 
-![](./media/UGV-Rover-details-23.jpg)
+The project keeps the real CAD model as the visual source of truth and adds physics, wheel joints, motor control, dataset collection, behavior-cloning pretraining, and PPO reinforcement learning around it.
 
-## Basic Description
-The Waveshare UGV robots utilize both an upper computer and a lower computer. This repository contains the program running on the upper computer, which is typically a Raspberry Pi in this setup.  
+## Training Concept
 
-The program running on the lower computer is either named [ugv_base_ros](https://github.com/effectsmachine/ugv_base_ros.git) or [ugv_base_general](https://github.com/effectsmachine/ugv_base_general.git) depending on the type of robot driver being used.  
+The training pipeline follows a staged curriculum:
 
-The upper computer communicates with the lower computer (the robot's driver based on ESP32) by sending JSON commands via GPIO UART. The host controller, which employs a Raspberry Pi, handles AI vision and strategy planning, while the sub-controller, utilizing an ESP32, manages motion control and sensor data processing. This setup ensures efficient collaboration and enhanced performance.
+1. Build a physically correct rover model from the CAD/USD asset.
+2. Collect teleoperation data in a simple environment.
+3. Pretrain a behavior-cloning policy from the dataset.
+4. Warm-start PPO from the pretrained policy instead of learning from scratch.
+5. Train first in an empty 7 x 5 m rectangular arena.
+6. Preserve the empty-space checkpoint for sim-to-real testing.
+7. Continue training in a static delivery city environment with asphalt roads, lane markings, sidewalks, buildings, parked cars, and boundary walls.
+8. Later add higher-fidelity camera and LiDAR observations for perception-heavy training.
 
-## Features
-- Real-time video based on WebRTC
-- Interactive tutorial based on JupyterLab
-- Pan-tilt camera control
-- Robotic arm control
-- Cross-platform web application base on Flask
-- Auto targeting (OpenCV)
-- Object Recognition (OpenCV)
-- Gesture Recognition (MediaPipe)
-- Face detection (OpenCV & MediaPipe)
-- Motion detection (OpenCV)
-- Line tracking base on vision (OpenCV)
-- Color Recognition (OpenCV)
-- Multi-threaded CV processing
-- Audio interactive
-- Shortcut key control
-- Photo taking
-- Video Recording
+This staged approach is intentional. The robot first learns stable motion, goal seeking, and collision avoidance from compact state observations. Full RTX cameras and real LiDAR can then be added after the control policy is already reliable.
 
-## Quick Install
-You need to install Raspberry Pi on your robot if you are using **WAVE ROVER**, **UGV01** or **UGV02**.  
+## Robot Model
 
-This app is already installed in the SD card of **UGV Rover**, **UGV Beast** and **RaspRover**.  
+The Isaac Sim assets are in:
 
-You can use this tutorial to upgrade your robot's upper computer program.  
+```bash
+assets/ugv-rover/isaacsim
+```
 
-You can use this tutorial to install this program on a pure Raspberry Pi OS.  
+Key files:
 
+```bash
+assets/ugv-rover/isaacsim/UGV_Rover_PT_AI_Kit.usd
+assets/ugv-rover/isaacsim/ugv_rover_physics.usda
+assets/ugv-rover/isaacsim/ugv_rover_physics_rl.usda
+assets/ugv-rover/isaacsim/real_world_physics.yaml
+```
 
-### Download the repo from github
+The rover uses real-world-inspired mass, inertia, friction, and drive limits so the policy has a better chance of transferring to hardware. Four wheels are motor-driven: front-left, rear-left, front-right, and rear-right. The middle wheels are passive and rotate through contact/friction, matching the intended physical behavior.
 
-You can clone this repository from Waveshare's GitHub to your local machine.
+## Environments
 
-    git clone https://github.com/waveshareteam/ugv_rpi.git
-    
-### Grant execution permission to the installation script
-    cd ugv_rpi/
-    sudo chmod +x setup.sh
-    sudo chmod +x autorun.sh
-### Install app (it'll take a while before finish)
-    sudo ./setup.sh
-### Autorun setup
-    ./autorun.sh
-### AccessPopup installation
-    cd AccessPopup
-    sudo chmod +x installconfig.sh
-    sudo ./installconfig.sh
-    *Input 1: Install AccessPopup
-    *Press any key to exit
-    *Input 9: Exit installconfig.sh
-### Reboot Device
-    sudo reboot
+Two Isaac Lab tasks are registered:
 
-After powering on the robot, the Raspberry Pi will automatically establish a hotspot, and the LED screen will display a series of system initialization messages:  
+```text
+Isaac-UGV-Rover-Empty-v0
+Isaac-UGV-Rover-City-v0
+```
 
-![](./media/RaspRover-LED-screen.png)
-- The first line `E` displays the IP address of the Ethernet port, which allows remote access to the Raspberry Pi. If it shows No Ethernet, it indicates that the Raspberry Pi is not connected to an Ethernet cable.
-- The second line `W` indicates the robot's wireless mode. In Access Point (AP) mode, the robot automatically sets up a hotspot with the default IP address `192.168.50.5`. In Station (STA) mode, the Raspberry Pi connects to a known WiFi network and displays the IP address for remote access.
-- The third line `F/J` specifies the Ethernet port numbers. Port `5000` provides access to the robot control Web UI, while port `8888` grants access to the JupyterLab interface.
-- The fourth line `STA` indicates that the WiFi is in Station (STA) mode. The time value represents the duration of robot usage. The dBm value indicates the signal strength RSSI in STA mode.  
+The empty environment is a 7 x 5 m rectangular arena with a circular goal marker. When the rover reaches the goal, a new goal is sampled so training continues without restarting the whole run.
 
+The city environment keeps the same policy shape but adds static obstacles and delivery-road visuals: black asphalt, lane markings, sidewalks, building-like blocks, parked cars, and boundary walls. This lets the policy continue from the empty-space checkpoint while learning obstacle clearance.
 
-You can access the robot web app using a mobile phone or PC. Simply open your browser and enter `[IP]:5000` (for example, `192.168.10.50:5000`) in the URL bar to control the robot.  
+## RL Formulation
 
-To access JupyterLab, use `[IP]:8888` (for example, `192.168.10.50:8888`).  
+Actions are continuous differential-drive commands:
 
-If the robot is not connected to a known WiFi network, it will automatically set up a hotspot named "`AccessPopup`" with the password `1234567890`. You can then use a mobile phone or PC to connect to this hotspot. Once connected, open your browser and enter `192.168.50.5:5000` in the URL bar to control the robot.  
+```text
+[linear_velocity, angular_velocity]
+```
 
-To ensure compatibility with various types of robots running on Raspberry Pi, we utilize a config.yaml file to specify the particular robot being used. You can configure the robot by entering the following command:
+The normalized action range is `[-1, 1]`. In the current task configuration this maps to:
 
-    s 22
+```text
+linear velocity:  up to 1.0 m/s
+angular velocity: up to 2.0 rad/s
+```
 
-In this command, the s directive denotes a robot-type setting. The first digit, `2`, signifies that the robot is a `UGV Rover`, with `1` representing `RaspRover` and `3` indicating `UGV Beast`. The second digit, also `2`, specifies the module as `Camera PT`, where `0` denotes `Nothing` and `1` signifies `RoArm-M2`.  
+Observations are a compact 30-dimensional vector:
 
-### Reboot Device
-If the program fails to run and encounters errors related to v4l2.py during runtime, you need to delete v4l2.py from both the Python virtual environment and the user environment. This will allow the program to automatically use the system-wide v4l2.py.  
+```text
+goal delta x/y
+goal distance
+sin/cos heading error
+goal direction x/y
+body linear velocity x/y
+body yaw angular velocity
+current action
+previous action
+16 planar LiDAR-like range readings
+```
 
-    cd ugv_rpi/  
-    sudo rm ugv-env/lib/python3.11/site-packages/v4l2.py  
-    sudo rm /home/[your_user_name]/.local/lib/python3.11/site-packages/v4l2.py  
+The reward encourages:
 
-Now you can restart the main program app.py.
+```text
+staying alive
+making progress toward the goal
+facing the goal
+reaching the goal
+smooth action changes
+reasonable action size
+staying away from walls
+staying away from obstacles
+avoiding termination
+```
 
-# License
-ugv_rpi for the Raspberry Pi: an open source robotics platform for the Raspberry Pi.
-Copyright (C) 2024 [Waveshare](https://www.waveshare.com/)
+The city task increases the goal reward and obstacle penalty so the rover learns delivery navigation without cutting through static objects.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+## Pretraining
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Teleoperation datasets are used for behavior cloning before PPO training. The pretrained policy is stored here:
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+```bash
+assets/ugv-rover/isaacsim/pretrained/ugv_isaaclab_bc_rsl_rl.pt
+```
+
+The preserved empty-space sim-to-real checkpoint is stored here:
+
+```bash
+assets/ugv-rover/isaacsim/sim_to_real/empty_space/ugv_empty_space_final_model_1399.pt
+```
+
+That checkpoint should stay preserved as the baseline policy for real-hardware tests in empty space. Later city training can continue from it, but should not replace it unless a new sim-to-real baseline is intentionally selected.
+
+## Training Commands
+
+Install or refresh the local Isaac Lab task package:
+
+```bash
+cd /home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/IsaacLab
+source ../env_isaaclab_isaacpy/bin/activate
+python -m pip install --no-build-isolation -e ../ugv_isaaclab
+```
+
+Train the empty arena task:
+
+```bash
+/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/train_ugv_empty_rl.sh
+```
+
+Train the city delivery task:
+
+```bash
+/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/train_ugv_city_rl.sh
+```
+
+The city launcher uses 100 parallel environments, opens the Isaac/Kit viewer, resumes from the latest city checkpoint if one exists, otherwise starts from the preserved empty-space checkpoint, and records training video every 10000 frames.
+
+## Video And Visualization
+
+Training video is configured to focus on one visible environment. The camera follows the rover and goal area with a slow orbit plus gentle zoom so the robot motion and path are easier to inspect.
+
+Current city video settings:
+
+```text
+video length:    7200 frames
+video interval:  10000 frames
+visible env:     environment 0
+camera behavior: follow, orbit, and zoom
+```
+
+## Perception Roadmap
+
+The current RL task does not yet train directly from raw camera images or full RTX LiDAR. It uses a lightweight planar LiDAR-style range vector so the first policy can learn fast and remain closer to what can be transferred to real hardware.
+
+Next perception stages:
+
+```text
+add real LiDAR-style scan observations
+add front camera features
+add top camera features
+add domain randomization for lighting, friction, mass, and obstacle placement
+compare low-dimensional policy against vision/LiDAR policy
+test the preserved empty-space checkpoint on real hardware
+```
+
+## Original Raspberry Pi Robot Code
+
+This repository also contains the Waveshare Raspberry Pi control stack for the physical UGV Rover, including Flask control UI, camera streaming, pan-tilt control, OpenCV examples, and tutorial notebooks. That code is useful for the final hardware bridge after simulation policies are ready.
+
+## License
+
+The original Waveshare Raspberry Pi code is licensed under the GNU General Public License v3.0. See `LICENSE` for details.
