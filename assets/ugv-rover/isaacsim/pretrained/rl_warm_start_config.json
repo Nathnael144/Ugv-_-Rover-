@@ -1,0 +1,28 @@
+{
+  "robot_stage": "/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/ugv_dataset_empty_env.usda",
+  "warm_start_checkpoint": "/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/pretrained/ugv_bc_policy.npz",
+  "observation_keys": [
+    "x_m",
+    "y_m",
+    "sin_yaw",
+    "cos_yaw",
+    "vx_m_s",
+    "vy_m_s",
+    "yaw_rate_rad_s"
+  ],
+  "action_keys": [
+    "target_linear_m_s",
+    "target_angular_rad_s"
+  ],
+  "action_limits": {
+    "linear_m_s": [
+      -1.3,
+      1.3
+    ],
+    "angular_rad_s": [
+      -4.0,
+      4.0
+    ]
+  },
+  "recommended_next_step": "Collect more varied demos, then initialize the RL actor from this policy."
+}

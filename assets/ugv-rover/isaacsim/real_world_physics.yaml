@@ -1,0 +1,87 @@
+# UGV Rover PT Raspberry Pi AI Kit physics parameters.
+# SI units are used throughout. Values marked "derived" are not manufacturer
+# measurements and should be replaced after physical system identification.
+
+robot:
+  manufacturer: Waveshare
+  model: UGV Rover PT PI4B/PI5 AI Kit
+  drive: six_wheel_four_wheel_drive
+  steering: differential
+
+geometry:
+  source: manufacturer
+  length_m: 0.23042
+  width_m: 0.25240
+  height_m: 0.25453
+  ground_clearance_m: 0.025
+  tire_radius_m: 0.040
+  tire_width_m: 0.0425
+
+mass:
+  source: manufacturer
+  complete_kit_without_user_batteries_kg: 2.190
+  tolerance_kg: 0.005
+  base_without_pan_tilt_or_user_batteries_kg: 1.874
+  pan_tilt_assembly_kg: 0.316
+  operating_mass_kg: "2.190 + measured_mass_of_three_18650_cells_kg + added_payload_kg"
+  note: "Measure the fully assembled robot; batteries are not included in the published kit mass."
+
+# First-order two-body estimate using the published masses and envelopes.
+# Axes: x forward, y left, z up. Origin: ground projection of geometric center.
+center_of_mass_estimate:
+  source: derived
+  x_m: 0.0
+  y_m: 0.0
+  z_m_without_batteries: 0.0796
+  uncertainty_m: 0.020
+
+inertia_estimate_without_batteries:
+  source: derived
+  reference: center_of_mass
+  units: kg_m2
+  ixx: 0.01745
+  iyy: 0.01591
+  izz: 0.01888
+  ixy: 0.0
+  ixz: 0.0
+  iyz: 0.0
+  uncertainty_percent: 30
+  note: "Do not treat this tensor as measured. Replace it using a bifilar-pendulum or CAD material model."
+
+motor:
+  source: manufacturer
+  model: JGB37-520
+  count: 4
+  reduction_ratio: 30
+  rated_voltage_v: 12.0
+  rated_current_a: 1.0
+  stall_current_a: 2.3
+  rated_speed_rad_s: 26.1799
+  no_load_speed_rad_s: 34.8717
+  rated_output_torque_nm: 0.3432
+  stall_output_torque_nm: 0.4903
+
+performance:
+  source: manufacturer
+  maximum_linear_speed_m_s: 1.3
+  moving_payload_kg: 4.0
+  supply_voltage_min_v: 9.0
+  supply_voltage_max_v: 12.6
+
+contact:
+  tire_material: soft_rubber
+  static_friction: null
+  dynamic_friction: null
+  rolling_resistance: null
+  restitution: null
+  note: "Identify on the real operating surface; these values are not published and are surface-dependent."
+
+identification_required:
+  - fully_assembled_operating_mass
+  - center_of_mass_xyz
+  - wheel_and_driven_assembly_masses
+  - wheel_axial_inertia
+  - tire_friction_on_target_surface
+  - rolling_resistance
+  - motor_dead_zone_and_torque_speed_curve
+  - drivetrain_backlash

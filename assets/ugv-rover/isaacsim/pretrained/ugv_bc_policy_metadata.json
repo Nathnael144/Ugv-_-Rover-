@@ -1,0 +1,27 @@
+{
+  "checkpoint": "/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/pretrained/ugv_bc_policy.npz",
+  "dataset_root": "/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/datasets/teleop",
+  "observation_keys": [
+    "x_m",
+    "y_m",
+    "sin_yaw",
+    "cos_yaw",
+    "vx_m_s",
+    "vy_m_s",
+    "yaw_rate_rad_s"
+  ],
+  "action_keys": [
+    "target_linear_m_s",
+    "target_angular_rad_s"
+  ],
+  "action_scale": [
+    1.2999999523162842,
+    4.0
+  ],
+  "policy_type": "numpy_mlp_tanh",
+  "hidden_layers": [
+    64,
+    64
+  ],
+  "notes": "Behavior cloning warm-start from teleoperation. Use this checkpoint to initialize or supervise the first RL policy before reward-only training."
+}

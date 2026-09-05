@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=70.0,<82.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ugv-isaaclab"
+version = "0.1.0"
+description = "Isaac Lab reinforcement-learning tasks for the Waveshare UGV rover."
+requires-python = ">=3.12"
+dependencies = [
+    "gymnasium",
+    "isaaclab",
+    "isaaclab-rl",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ugv_isaaclab", "ugv_isaaclab.*"]

@@ -1,0 +1,741 @@
+#usda 1.0
+(
+    customLayerData = {
+        dictionary cameraSettings = {
+            dictionary Front = {
+                double3 position = (5, 0, 0)
+                double radius = 5
+            }
+            dictionary Perspective = {
+                double3 position = (1.0241738142128796, 0.6314795793751775, 0.6655728704307815)
+                double3 target = (0.250431719190069, -0.1422625156476327, -0.10816920612417447)
+            }
+            dictionary Right = {
+                double3 position = (0, -5, 0)
+                double radius = 5
+            }
+            dictionary Top = {
+                double3 position = (0, 0, 5)
+                double radius = 5
+            }
+            string boundCamera = "/OmniverseKit_Persp"
+        }
+        dictionary omni_layer = {
+            string authoring_layer = "./ugv_rover_physics.usda"
+        }
+        dictionary renderSettings = {
+        }
+    }
+    defaultPrim = "World"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    timeCodesPerSecond = 60
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    def PhysicsScene "PhysicsScene" (
+        prepend apiSchemas = ["NewtonSceneAPI", "PhysxSceneAPI"]
+    )
+    {
+        vector3f physics:gravityDirection = (0, 0, -1)
+        float physics:gravityMagnitude = 9.81
+    }
+
+    def Scope "Materials"
+    {
+        def Material "Tire" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.8
+            float physics:restitution = 0.05
+            float physics:staticFriction = 1
+        }
+
+        def Material "Ground" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.7
+            float physics:restitution = 0
+            float physics:staticFriction = 0.8
+        }
+    }
+
+    def Cube "Ground" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        rel material:binding:physics = </World/Materials/Ground>
+        color3f[] primvars:displayColor = [(0.22, 0.24, 0.21)]
+        double size = 1
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (20, 20, 0.02)
+        double3 xformOp:translate = (-0.47317172968379606, 0.8362812609188472, -0.010737424453261021)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def DistantLight "Sun"
+    {
+        float angle = 1
+        float intensity = 2500
+        double3 xformOp:rotateXYZ = (35, -25, -30)
+        uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+    }
+
+    def Xform "UGV_Rover" (
+        prepend apiSchemas = ["PhysicsArticulationRootAPI", "PhysxArticulationAPI"]
+    )
+    {
+        bool physxArticulation:enabledSelfCollisions = 0
+        int physxArticulation:solverPositionIterationCount = 16
+        int physxArticulation:solverVelocityIterationCount = 4
+        double3 xformOp:translate = (0, 0, 0.002)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Xform "Chassis" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysxRigidBodyAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (0, 0, 0.0796)
+            float physics:mass = 1.68
+            bool physics:rigidBodyEnabled = 1
+            float physxRigidBody:angularDamping = 0.1
+            float physxRigidBody:linearDamping = 0.05
+            float physxRigidBody:maxAngularVelocity = 50
+            matrix4d xformOp:transform = ( (0.9441985666781372, 0.32917445523383565, -0.01154267644522275, 0), (-0.3292089691522308, 0.9442563539800675, -0.0011752807253056774, 0), (0.010512373078287923, 0.00490965136901414, 0.9999326903957272, 0), (0.5614633560180664, -0.026089925318956375, -0.0014693323969841004, 1) )
+
+            def Xform "Visual" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@
+            )
+            {
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0, 0.08121)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+
+                over "tn__UGVRoverPTAIKit_oF9CF"
+                {
+                    over "tn__80mmv31_h7t6Zib8lkf2" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv32_h7t6Zib8lkf2" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv33_h7t6Zib8lkf2" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv34_h7t6Zib8lkf2" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv35_h7t6Zib8lkf2" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv36_h7t6Zib8lkf2" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv21_h7t6bkVApuf0" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv22_h7t6bkVApuf0" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv23_h7t6bkVApuf0" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv24_h7t6bkVApuf0" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv25_h7t6bkVApuf0" (
+                        active = false
+                    )
+                    {
+                    }
+
+                    over "tn__80mmv26_h7t6bkVApuf0" (
+                        active = false
+                    )
+                    {
+                    }
+                }
+            }
+
+            def Cube "Collision" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                bool physics:collisionEnabled = 1
+                double size = 1
+                token visibility = "invisible"
+                float3 xformOp:scale = (0.19, 0.16, 0.095)
+                double3 xformOp:translate = (0, 0, 0.0725)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+            }
+        }
+
+        def Xform "wheel_front_left" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysxRigidBodyAPI"]
+        )
+        {
+            float physics:mass = 0.085
+            float physxRigidBody:angularDamping = 0.02
+            float physxRigidBody:maxAngularVelocity = 40
+            matrix4d xformOp:transform = ( (0.7857410949792434, 0.27463348567356594, 0.5542447991044772, 0), (-0.3292089323584362, 0.9442563612777958, -0.0011753640892440131, 0), (-0.523671965683665, -0.18153884204795112, 0.8323528436550321, 0), (0.6138695478439331, 0.08469385653734207, 0.03743846374750137, 1) )
+            double3 xformOp:translate = (0.0855, 0.08731, 0.04)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+
+            def Xform "hub" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv34_h7t6Zib8lkf2>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Xform "tire" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv22_h7t6bkVApuf0>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Cylinder "Collision" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                uniform token axis = "Y"
+                double height = 0.0425
+                rel material:binding:physics = </World/Materials/Tire>
+                double radius = 0.04
+                token visibility = "invisible"
+            }
+        }
+
+        def Xform "wheel_middle_left" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysxRigidBodyAPI"]
+        )
+        {
+            float physics:mass = 0.085
+            float physxRigidBody:angularDamping = 0.02
+            float physxRigidBody:maxAngularVelocity = 40
+            matrix4d xformOp:transform = ( (-0.7496230953643261, -0.26059385232081334, 0.6084041935954201, 0), (-0.32920871043340205, 0.9442564433852139, -0.001175361988863699, 0), (-0.5741832840014343, -0.20117306140143754, -0.7936262026480865, 0), (0.5328114032745361, 0.05749370902776718, 0.0384241681098938, 1) )
+            double3 xformOp:translate = (0, 0.08831, 0.04)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+
+            def Xform "hub" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv35_h7t6Zib8lkf2>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Xform "tire" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv25_h7t6bkVApuf0>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Cylinder "Collision" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                uniform token axis = "Y"
+                double height = 0.0425
+                rel material:binding:physics = </World/Materials/Tire>
+                double radius = 0.04
+                token visibility = "invisible"
+            }
+        }
+
+        def Xform "wheel_rear_left" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysxRigidBodyAPI"]
+        )
+        {
+            float physics:mass = 0.085
+            float physxRigidBody:angularDamping = 0.02
+            float physxRigidBody:maxAngularVelocity = 40
+            matrix4d xformOp:transform = ( (-0.9097166932193301, -0.3168326359369501, 0.2683884480864943, 0), (-0.3292087082693599, 0.9442564468608253, -0.0011753201587598738, 0), (-0.2530551415416259, -0.08942502884036507, -0.9633099150573674, 0), (0.4524116516113281, 0.028405029326677322, 0.039412238031625746, 1) )
+            double3 xformOp:translate = (-0.0855, 0.08731, 0.04)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+
+            def Xform "hub" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv33_h7t6Zib8lkf2>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Xform "tire" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv21_h7t6bkVApuf0>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Cylinder "Collision" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                uniform token axis = "Y"
+                double height = 0.0425
+                rel material:binding:physics = </World/Materials/Tire>
+                double radius = 0.04
+                token visibility = "invisible"
+            }
+        }
+
+        def Xform "wheel_front_right" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysxRigidBodyAPI"]
+        )
+        {
+            float physics:mass = 0.085
+            float physxRigidBody:angularDamping = 0.02
+            float physxRigidBody:maxAngularVelocity = 40
+            matrix4d xformOp:transform = ( (0.8712240469475345, 0.30422621771527303, 0.38524673416384947, 0), (-0.32920894881936236, 0.9442563618921062, -0.001175327322392672, 0), (-0.36412924319052276, -0.1258027099538146, 0.9228128515905508, 0), (0.6713560819625854, -0.08019213378429413, 0.037643671363592146, 1) )
+            double3 xformOp:translate = (0.0855, -0.08731, 0.04)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+
+            def Xform "hub" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv32_h7t6Zib8lkf2>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Xform "tire" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv23_h7t6bkVApuf0>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Cylinder "Collision" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                uniform token axis = "Y"
+                double height = 0.0425
+                rel material:binding:physics = </World/Materials/Tire>
+                double radius = 0.04
+                token visibility = "invisible"
+            }
+        }
+
+        def Xform "wheel_middle_right" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysxRigidBodyAPI"]
+        )
+        {
+            float physics:mass = 0.085
+            float physxRigidBody:angularDamping = 0.02
+            float physxRigidBody:maxAngularVelocity = 40
+            matrix4d xformOp:transform = ( (0.48773774698171257, 0.16898070612084437, -0.8564796926539422, 0), (-0.3292089172059254, 0.9442563812550308, -0.0011751752749837863, 0), (0.8085378357268092, 0.2825339150681305, 0.5161794309185471, 0), (0.5909563302993774, -0.10928080976009369, 0.03863174873590469, 1) )
+            double3 xformOp:translate = (0, -0.08831, 0.04)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+
+            def Xform "hub" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv36_h7t6Zib8lkf2>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Xform "tire" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv26_h7t6bkVApuf0>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Cylinder "Collision" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                uniform token axis = "Y"
+                double height = 0.0425
+                rel material:binding:physics = </World/Materials/Tire>
+                double radius = 0.04
+                token visibility = "invisible"
+            }
+        }
+
+        def Xform "wheel_rear_right" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysxRigidBodyAPI"]
+        )
+        {
+            float physics:mass = 0.085
+            float physxRigidBody:angularDamping = 0.02
+            float physxRigidBody:maxAngularVelocity = 40
+            matrix4d xformOp:transform = ( (-0.6968351701338773, -0.2421065969364138, 0.675133350114554, 0), (-0.32920874568191305, 0.944256436004872, -0.001175378085633838, 0), (-0.6372144430908433, -0.22307885481813727, -0.7376947028894794, 0), (0.5098981261253357, -0.13648095726966858, 0.03961747545003891, 1) )
+            double3 xformOp:translate = (-0.0855, -0.08731, 0.04)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+
+            def Xform "hub" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv31_h7t6Zib8lkf2>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Xform "tire" (
+                prepend references = @./UGV_Rover_PT_AI_Kit.usd@</UGV_Rover_PT_AI_Kit/tn__UGVRoverPTAIKit_oF9CF/tn__80mmv24_h7t6bkVApuf0>
+            )
+            {
+                double3 xformOp:rotateXYZ = (90, 0, 0)
+                float3 xformOp:scale = (0.001, 0.001, 0.001)
+                double3 xformOp:translate = (0, 0.02029, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+
+            def Cylinder "Collision" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                uniform token axis = "Y"
+                double height = 0.0425
+                rel material:binding:physics = </World/Materials/Tire>
+                double radius = 0.04
+                token visibility = "invisible"
+            }
+        }
+
+        def Scope "Joints"
+        {
+            def PhysicsRevoluteJoint "front_left" (
+                prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+            )
+            {
+                float drive:angular:physics:damping = 0.35
+                float drive:angular:physics:maxForce = 0.4903
+                float drive:angular:physics:stiffness = 0
+                float drive:angular:physics:targetVelocity = -181.77086
+                uniform token drive:angular:physics:type = "force"
+                uniform token physics:axis = "Y"
+                rel physics:body0 = </World/UGV_Rover/Chassis>
+                rel physics:body1 = </World/UGV_Rover/wheel_front_left>
+                point3f physics:localPos0 = (0.0855, 0.08731, 0.04)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
+            }
+
+            def PhysicsRevoluteJoint "middle_left"
+            {
+                uniform token physics:axis = "Y"
+                rel physics:body0 = </World/UGV_Rover/Chassis>
+                rel physics:body1 = </World/UGV_Rover/wheel_middle_left>
+                point3f physics:localPos0 = (0, 0.08831, 0.04)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
+            }
+
+            def PhysicsRevoluteJoint "rear_left" (
+                prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+            )
+            {
+                float drive:angular:physics:damping = 0.35
+                float drive:angular:physics:maxForce = 0.4903
+                float drive:angular:physics:stiffness = 0
+                float drive:angular:physics:targetVelocity = -181.77086
+                uniform token drive:angular:physics:type = "force"
+                uniform token physics:axis = "Y"
+                rel physics:body0 = </World/UGV_Rover/Chassis>
+                rel physics:body1 = </World/UGV_Rover/wheel_rear_left>
+                point3f physics:localPos0 = (-0.0855, 0.08731, 0.04)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
+            }
+
+            def PhysicsRevoluteJoint "front_right" (
+                prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+            )
+            {
+                float drive:angular:physics:damping = 0.35
+                float drive:angular:physics:maxForce = 0.4903
+                float drive:angular:physics:stiffness = 0
+                float drive:angular:physics:targetVelocity = -2683.018
+                uniform token drive:angular:physics:type = "force"
+                uniform token physics:axis = "Y"
+                rel physics:body0 = </World/UGV_Rover/Chassis>
+                rel physics:body1 = </World/UGV_Rover/wheel_front_right>
+                point3f physics:localPos0 = (0.0855, -0.08731, 0.04)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
+            }
+
+            def PhysicsRevoluteJoint "middle_right"
+            {
+                uniform token physics:axis = "Y"
+                rel physics:body0 = </World/UGV_Rover/Chassis>
+                rel physics:body1 = </World/UGV_Rover/wheel_middle_right>
+                point3f physics:localPos0 = (0, -0.08831, 0.04)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
+            }
+
+            def PhysicsRevoluteJoint "rear_right" (
+                prepend apiSchemas = ["PhysicsDriveAPI:angular"]
+            )
+            {
+                float drive:angular:physics:damping = 0.35
+                float drive:angular:physics:maxForce = 0.4903
+                float drive:angular:physics:stiffness = 0
+                float drive:angular:physics:targetVelocity = -2683.018
+                uniform token drive:angular:physics:type = "force"
+                uniform token physics:axis = "Y"
+                rel physics:body0 = </World/UGV_Rover/Chassis>
+                rel physics:body1 = </World/UGV_Rover/wheel_rear_right>
+                point3f physics:localPos0 = (-0.0855, -0.08731, 0.04)
+                point3f physics:localPos1 = (0, 0, 0)
+                quatf physics:localRot0 = (1, 0, 0, 0)
+                quatf physics:localRot1 = (1, 0, 0, 0)
+            }
+        }
+    }
+}
+
+def "Render" (
+    hide_in_stage_window = true
+    no_delete = true
+)
+{
+    def "OmniverseKit"
+    {
+        def "HydraTextures" (
+            hide_in_stage_window = true
+            no_delete = true
+        )
+        {
+            def RenderProduct "omni_kit_widget_viewport_ViewportTexture_0" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </OmniverseKit_Persp>
+                token omni:rtx:ambientOcclusion:denoiserMode = "none"
+                token omni:rtx:background:source:texture:textureMode = "repeatMirrored"
+                token omni:rtx:background:source:type = "domeLight"
+                bool omni:rtx:debug:view:pixelDebug:enableFixedTextPos = 1
+                token omni:rtx:directLighting:sampledLighting:denoisingTechnique = "None"
+                bool omni:rtx:dlss:frameGeneration = 0
+                float3 omni:rtx:domeLight:rotationAxis = (0, 0, 1)
+                bool omni:rtx:indirectDiffuse:denoiser:enabled = 0
+                bool omni:rtx:material:db:syncLoads = 1
+                token omni:rtx:post:dlss:execMode = "performance"
+                bool omni:rtx:post:registeredCompositing:invertColorCorrection = 1
+                bool omni:rtx:post:registeredCompositing:invertToneMap = 1
+                bool omni:rtx:pt:adaptiveSampling:filterError = 0
+                uint omni:rtx:pt:adaptiveSampling:fixedSppIterations = 2
+                uint omni:rtx:pt:maxSamplesPerLaunch = 2073600
+                uint omni:rtx:pt:mgpu:maxPixelsPerRegionExponent = 12
+                bool omni:rtx:reflections:denoiser:enabled = 0
+                token omni:rtx:rendermode = "RealTimePathTracing"
+                color3f omni:rtx:rt:ambientLight:color = (0.1, 0.1, 0.1)
+                bool omni:rtx:rt:demoire = 0
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:rt:lightcache:spatialCache:dontResolveConflicts = 1
+                int omni:rtx:rt:sss:samples = 1
+                uint omni:rtx:rtpt:maxVolumeBounces = 15
+                float omni:rtx:rtpt:modulatingRoughnessThreshold = 0.08
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                bool omni:rtx:scene:hydra:mdlMaterialWarmup = 1
+                bool omni:rtx:scene:useViewLightingMode
+                rel orderedVars = </Render/Vars/LdrColor>
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1280, 720)
+            }
+        }
+    }
+
+    def RenderSettings "OmniverseGlobalRenderSettings" (
+        prepend apiSchemas = ["OmniRtxSettingsGlobalRtAdvancedAPI_1", "OmniRtxSettingsGlobalPtAdvancedAPI_1"]
+        no_delete = true
+    )
+    {
+        rel products = </Render/OmniverseKit/HydraTextures/omni_kit_widget_viewport_ViewportTexture_0>
+    }
+
+    def "Vars"
+    {
+        def RenderVar "LdrColor" (
+            hide_in_stage_window = true
+            no_delete = true
+        )
+        {
+            uniform string sourceName = "LdrColor"
+            uniform token sourceType = "raw"
+        }
+    }
+}
+
+over "OmniverseKit_Persp" (
+    prepend apiSchemas = ["OmniRtxCameraAutoExposureAPI_1", "OmniRtxCameraExposureAPI_1"]
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (0.01, 10000000)
+    float exposure:fStop = 5
+    float exposure:responsivity = 1.1026709
+    float exposure:time = 0.02
+    float focalLength = 18.147562
+    float focusDistance = 400
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 8.590262821815608e-18, -1.340160609871873)
+    float3 xformOp:rotateXYZ = (54.73561, -4.6031493e-15, 135)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (1.0241738142128796, 0.6314795793751775, 0.6655728704307815)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+
+over "OmniverseKit_Front" (
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (1, 10000000)
+    float horizontalAperture = 50
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -5)
+    token projection = "orthographic"
+    float verticalAperture = 50
+    float3 xformOp:rotateXYZ = (90, -1.2722219e-14, 90)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (5, 0, 0)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+
+over "OmniverseKit_Right" (
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (1, 10000000)
+    float horizontalAperture = 50
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -5)
+    token projection = "orthographic"
+    float verticalAperture = 50
+    float3 xformOp:rotateXYZ = (90, -1.2833635e-30, 1.2722219e-14)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (0, -5, 0)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+
+over "OmniverseKit_Top" (
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (1, 10000000)
+    float horizontalAperture = 50
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -5)
+    token projection = "orthographic"
+    float verticalAperture = 50
+    float3 xformOp:rotateXYZ = (-1.2722219e-14, -7.016709e-15, -90)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (0, 0, 5)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+

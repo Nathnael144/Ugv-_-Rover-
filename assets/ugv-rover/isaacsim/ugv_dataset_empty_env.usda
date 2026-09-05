@@ -1,0 +1,130 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    subLayers = [
+        @./ugv_rover_physics.usda@
+    ]
+    timeCodesPerSecond = 60
+    upAxis = "Z"
+)
+
+over "World"
+{
+    over "Ground"
+    {
+        float3 xformOp:scale = (20, 20, 0.02)
+        double3 xformOp:translate = (0, 0, -0.01)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Xform "DatasetArena"
+    {
+        def Scope "Materials"
+        {
+            def Material "Boundary"
+            {
+                color3f[] primvars:displayColor = [(0.18, 0.34, 0.47)]
+            }
+        }
+
+        def Cube "Wall_North" (
+            prepend apiSchemas = ["PhysicsCollisionAPI"]
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.34, 0.47)]
+            double size = 1
+            double3 xformOp:translate = (0, 2.5, 0.1)
+            float3 xformOp:scale = (7.2, 0.08, 0.2)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Wall_South" (
+            prepend apiSchemas = ["PhysicsCollisionAPI"]
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.34, 0.47)]
+            double size = 1
+            double3 xformOp:translate = (0, -2.5, 0.1)
+            float3 xformOp:scale = (7.2, 0.08, 0.2)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Wall_East" (
+            prepend apiSchemas = ["PhysicsCollisionAPI"]
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.34, 0.47)]
+            double size = 1
+            double3 xformOp:translate = (3.5, 0, 0.1)
+            float3 xformOp:scale = (0.08, 5.0, 0.2)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+
+        def Cube "Wall_West" (
+            prepend apiSchemas = ["PhysicsCollisionAPI"]
+        )
+        {
+            color3f[] primvars:displayColor = [(0.18, 0.34, 0.47)]
+            double size = 1
+            double3 xformOp:translate = (-3.5, 0, 0.1)
+            float3 xformOp:scale = (0.08, 5.0, 0.2)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+    }
+
+    over "UGV_Rover"
+    {
+        double3 xformOp:translate = (0, 0, 0.002)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        over "wheel_front_left"
+        {
+            over "Collision"
+            {
+                token visibility = "invisible"
+            }
+        }
+
+        over "wheel_middle_left"
+        {
+            over "Collision"
+            {
+                token visibility = "invisible"
+            }
+        }
+
+        over "wheel_rear_left"
+        {
+            over "Collision"
+            {
+                token visibility = "invisible"
+            }
+        }
+
+        over "wheel_front_right"
+        {
+            over "Collision"
+            {
+                token visibility = "invisible"
+            }
+        }
+
+        over "wheel_middle_right"
+        {
+            over "Collision"
+            {
+                token visibility = "invisible"
+            }
+        }
+
+        over "wheel_rear_right"
+        {
+            over "Collision"
+            {
+                token visibility = "invisible"
+            }
+        }
+    }
+}

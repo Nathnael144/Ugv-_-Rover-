@@ -1,0 +1,9 @@
+{
+  "samples": 12360.0,
+  "train_samples": 9888.0,
+  "validation_samples": 2472.0,
+  "train_rmse_linear_m_s": 0.03843311592936516,
+  "train_rmse_angular_rad_s": 0.09621454775333405,
+  "validation_rmse_linear_m_s": 0.034794583916664124,
+  "validation_rmse_angular_rad_s": 0.09723097831010818
+}

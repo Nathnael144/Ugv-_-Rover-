@@ -1,0 +1,30 @@
+{
+  "checkpoint": "/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/pretrained/ugv_isaaclab_bc_rsl_rl.pt",
+  "dataset_root": "/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/datasets/teleop",
+  "sources": [
+    "/home/nathan/Downloads/ugv_rpi-main/assets/ugv-rover/isaacsim/datasets/teleop/20260905_111817/teleop.csv"
+  ],
+  "goal_horizon_samples": 90,
+  "observation_space": 30,
+  "action_space": 2,
+  "action_limits": {
+    "linear_m_s": [
+      -1.0,
+      1.0
+    ],
+    "angular_rad_s": [
+      -2.0,
+      2.0
+    ]
+  },
+  "policy_architecture": {
+    "type": "rsl_rl.MLPModel",
+    "hidden_dims": [
+      128,
+      128
+    ],
+    "activation": "elu",
+    "actor_distribution": "GaussianDistribution(init_std=0.6)"
+  },
+  "notes": "RSL-RL checkpoint compatible with Isaac-UGV-Rover-Empty-v0 PPO --checkpoint."
+}
