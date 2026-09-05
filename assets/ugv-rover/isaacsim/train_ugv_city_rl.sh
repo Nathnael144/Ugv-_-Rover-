@@ -6,6 +6,7 @@ ISAACLAB_DIR="${ISAACSIM_DIR}/IsaacLab"
 VENV_DIR="${ISAACSIM_DIR}/env_isaaclab_isaacpy"
 EMPTY_SIM_TO_REAL_CHECKPOINT="${ISAACSIM_DIR}/sim_to_real/empty_space/ugv_empty_space_final_model_1399.pt"
 RUN_DIR="${ISAACLAB_DIR}/logs/rsl_rl/ugv_rover_city_static"
+CITY_MAX_ITERATIONS="${CITY_MAX_ITERATIONS:-600}"
 
 source "${VENV_DIR}/bin/activate"
 export LD_PRELOAD="${LD_PRELOAD:-}:/lib/aarch64-linux-gnu/libgomp.so.1"
@@ -36,4 +37,5 @@ exec ./isaaclab.sh train \
   --video \
   --video_length 7200 \
   --video_interval 10000 \
+  --max_iterations "${CITY_MAX_ITERATIONS}" \
   --checkpoint "${TRAIN_CHECKPOINT}"
