@@ -63,7 +63,7 @@ The normalized action range is `[-1, 1]`. In the current task configuration this
 
 ```text
 linear velocity:  up to 1.0 m/s
-angular velocity: up to 2.0 rad/s
+angular velocity: up to 2.0 rad/s in empty space, 2.8 rad/s in the city task
 ```
 
 Observations are a compact 30-dimensional vector:
@@ -107,16 +107,18 @@ The empty task and city task use the same reward structure. The city task overri
 | `rew_goal` | `5.0` | `6.0` | Bonus when the rover reaches the circular goal marker. |
 | `rew_heading` | `0.15` | `0.15` | Reward for pointing the robot front toward the goal. |
 | `rew_forward_velocity` | `0.20` | `0.28` | Encourages forward motion as the normal driving mode. |
-| `rew_reverse_action` | `-0.25` | `-0.35` | Penalizes reverse so it is not the default strategy. |
-| `rew_yaw_rate` | `-0.015` | `-0.02` | Penalizes excessive spinning or sharp yaw motion. |
-| `rew_unneeded_turn` | `-0.04` | `-0.06` | Penalizes turning when already facing the goal. |
+| `rew_reverse_action` | `-0.25` | `-0.20` | Keeps reverse from becoming the default strategy. The penalty is reduced near walls/obstacles and when reverse makes progress. |
+| `rew_reverse_progress` | `0.50` | `1.00` | Gives credit when reverse actually reduces distance to the goal. |
+| `rew_yaw_rate` | `-0.015` | `-0.012` | Penalizes excessive spinning, but the penalty is reduced near walls/obstacles or when a large heading correction is needed. |
+| `rew_unneeded_turn` | `-0.04` | `-0.06` | Penalizes turning when already facing the goal and not under clearance pressure. |
+| `rew_clearance_turn` | `0.02` | `0.05` | Encourages useful turning when close to walls or obstacles. |
 | `rew_action_rate` | `-0.03` | `-0.03` | Penalizes sudden action changes for smoother driving. |
 | `rew_action_mag` | `-0.01` | `-0.01` | Penalizes unnecessarily large commands. |
-| `rew_wall_margin` | `-0.25` | `-0.25` | Penalizes getting too close to boundary walls. |
+| `rew_wall_margin` | `-0.25` | `-0.60` | Penalizes getting too close to boundary walls. |
 | `rew_obstacle_margin` | `-0.35` | `-0.60` | Penalizes getting too close to city obstacles. |
 | `rew_terminated` | `-3.0` | `-4.0` | Penalty for collision, leaving the arena, or tipping. |
 
-Reverse is still allowed. The policy action can command negative linear velocity, but reverse receives a penalty. Near an obstacle, the reverse penalty is reduced so the robot can back out when that is the safest maneuver. This should teach: drive forward and turn smoothly when possible, reverse only when useful for obstacle avoidance.
+Reverse is still allowed. The policy action can command negative linear velocity, but reverse receives a small penalty so it does not become the default strategy. The penalty is reduced near obstacles/walls and when reverse makes progress toward the goal, so the rover can back out or choose a shorter reverse maneuver when that is actually useful.
 
 Current city geometry and perception values:
 
@@ -132,7 +134,7 @@ Current city geometry and perception values:
 | Goal reached radius | `0.25 m` |
 | Obstacle safety margin | `0.28 m` |
 | Max linear speed | `1.0 m/s` |
-| Max angular speed | `2.0 rad/s` |
+| Max angular speed | `2.0 rad/s` empty, `2.8 rad/s` city |
 
 ## Pretraining
 
@@ -219,6 +221,7 @@ These notes record the important project decisions so future training changes ha
 | Reward shaping | Add forward-motion and smooth-turn preference while keeping reverse available. | The robot was using reverse too often; reverse should remain an escape behavior, not the main strategy. |
 | Wider city | Expand the city training area to 10 x 7 m. | A wider arena gives more realistic delivery paths and avoids overfitting to a small box. |
 | LiDAR range | Increase city LiDAR-like range from 4 m to 6 m without changing ray count. | Longer range helps in the bigger arena while preserving the 30-D observation size for checkpoint compatibility. |
+| Corner stability | Increase useful turning near walls and obstacles. | The rover was observed turning too slowly around obstacle corners and hitting walls. |
 | Camera sensors | Delay raw RTX camera training. | First stabilize locomotion/control; then add high-dimensional perception after the policy is reliable. |
 | Recording | Record focused training videos every 10000 frames. | Videos make it easier to diagnose path quality, reverse behavior, collisions, and goal reaching. |
 
@@ -241,19 +244,20 @@ This journal captures the useful engineering discussion behind the current robot
 | Termination | Failure termination happens for leaving the arena, hitting/getting too close to obstacles, or tipping. Timeout reset is not treated as failure. | City termination penalty is `-4.0`. |
 | Wider arena | The city arena was expanded from `7 x 5 m` to `10 x 7 m` to give more realistic delivery paths. | Current city arena is `10 x 7 m`. |
 | LiDAR scope | Increasing LiDAR ray count would change observation size and break checkpoint compatibility. Increasing range keeps the shape compatible. | City LiDAR-like range is `6 m`, still `16` rays. |
+| Corner/wall behavior | Simulation review showed the rover sometimes turned too slowly near obstacle corners and hit boundary walls. Reverse should be allowed when it helps find a shorter safe path. | Next run increases useful city yaw authority, reduces wasted yaw punishment near danger, strengthens wall avoidance, and credits reverse progress. |
 | Cameras and full LiDAR | Raw RTX cameras and full LiDAR are important, but should come after stable low-dimensional control. | Planned next perception stage. |
 | Video recording | Training video should focus on one environment and follow/orbit/zoom around the robot/path. | Video recording is enabled every `10000` frames. |
 | GitHub workflow | The workspace should be pushed directly to the project repository, with README as the living documentation. | Main branch is updated with training code and notes. |
 
-Latest observed training snapshot for the `10 x 7 m` city continuation:
+Completed baseline snapshot before the corner-stability continuation:
 
 ```text
 run:                  2026-09-07_10-33-31
-iteration:            5815 / 6148
-mean_reward:          45.65
-entropy_loss:         8.67
-action_std:           18.77
-mean_episode_length:  412.20
+iteration:            6147 / 6148
+mean_reward:          46.26
+entropy_loss:         8.78
+action_std:           19.90
+mean_episode_length:  406.50
 ```
 
 ## Original Raspberry Pi Robot Code

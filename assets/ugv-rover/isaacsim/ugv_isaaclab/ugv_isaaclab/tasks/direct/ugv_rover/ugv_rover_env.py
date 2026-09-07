@@ -264,11 +264,20 @@ class UGVRoverEmptyEnv(DirectRLEnv):
         near_obstacle = (self.cfg.obstacle_safety_margin_m - obstacle_margin).clamp_min(0.0)
 
         forward_speed = (front_lin_vel_b[:, 0] / self.cfg.max_linear_m_s).clamp(-1.0, 1.0)
+        forward_motion = forward_speed.clamp_min(0.0)
         reverse_action = (-self._actions[:, 0]).clamp_min(0.0)
-        reverse_allowed = (obstacle_margin < self.cfg.obstacle_safety_margin_m * 1.5).float()
-        reverse_penalty_scale = 1.0 - 0.75 * reverse_allowed
+        wall_pressure = (near_wall / self.cfg.safety_margin_m).clamp(0.0, 1.0)
+        obstacle_pressure = (near_obstacle / self.cfg.obstacle_safety_margin_m).clamp(0.0, 1.0)
+        clearance_pressure = torch.maximum(wall_pressure, obstacle_pressure)
+        progressing = (progress > 0.0).float()
+        reverse_penalty_scale = (1.0 - 0.70 * clearance_pressure - 0.40 * progressing).clamp(0.15, 1.0)
+        reverse_progress = reverse_action * progress.clamp_min(0.0)
         yaw_rate = torch.abs(root_ang_vel_b[:, 2]) / self.cfg.max_angular_rad_s
-        unneeded_turn = torch.abs(self._actions[:, 1]) * torch.cos(heading_error).clamp_min(0.0)
+        heading_turn_need = (heading_error / math.pi).clamp(0.0, 1.0)
+        yaw_penalty_scale = ((1.0 - 0.75 * clearance_pressure) * (1.0 - 0.50 * heading_turn_need)).clamp(0.10, 1.0)
+        turn_action = torch.abs(self._actions[:, 1])
+        unneeded_turn = turn_action * torch.cos(heading_error).clamp_min(0.0) * (1.0 - clearance_pressure)
+        clearance_turn = turn_action * clearance_pressure * (0.35 + 0.65 * heading_turn_need)
         action_rate = torch.sum(torch.square(self._actions - self._previous_actions), dim=-1)
         action_mag = torch.sum(torch.square(self._actions), dim=-1)
         reward = (
@@ -276,10 +285,12 @@ class UGVRoverEmptyEnv(DirectRLEnv):
             + self.cfg.rew_progress * progress
             + self.cfg.rew_heading * torch.cos(heading_error)
             + self.cfg.rew_goal * reached.float()
-            + self.cfg.rew_forward_velocity * forward_speed
+            + self.cfg.rew_forward_velocity * forward_motion
             + self.cfg.rew_reverse_action * reverse_action * reverse_penalty_scale
-            + self.cfg.rew_yaw_rate * yaw_rate
+            + self.cfg.rew_reverse_progress * reverse_progress
+            + self.cfg.rew_yaw_rate * yaw_rate * yaw_penalty_scale
             + self.cfg.rew_unneeded_turn * unneeded_turn
+            + self.cfg.rew_clearance_turn * clearance_turn
             + self.cfg.rew_action_rate * action_rate
             + self.cfg.rew_action_mag * action_mag
             + self.cfg.rew_wall_margin * near_wall
