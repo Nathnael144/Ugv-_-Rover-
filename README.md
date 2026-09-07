@@ -176,6 +176,19 @@ Train the city delivery task:
 
 The city launcher uses 100 parallel environments, opens the Isaac/Kit viewer, resumes from the latest city checkpoint if one exists, otherwise starts from the preserved empty-space checkpoint, and records training video every 10000 frames.
 
+For the controlled-exploration continuation, the high-std city checkpoint was copied and its actor Gaussian standard deviation was reset:
+
+```text
+source checkpoint: model_7146.pt
+low-std checkpoint: model_7146_low_std_0p30.pt
+old action std: [23.79, 16.24]
+new action std: [0.30, 0.30]
+PPO entropy coefficient: 0.0005
+PPO learning rate: 5e-5
+```
+
+This phase is intended to keep the learned city navigation behavior while making actions smoother, less random, and more suitable for real-hardware transfer.
+
 ## Video And Visualization
 
 Training video is configured to focus on one visible environment. The camera follows the rover and goal area with a slow orbit plus gentle zoom so the robot motion and path are easier to inspect.
@@ -222,6 +235,7 @@ These notes record the important project decisions so future training changes ha
 | Wider city | Expand the city training area to 10 x 7 m. | A wider arena gives more realistic delivery paths and avoids overfitting to a small box. |
 | LiDAR range | Increase city LiDAR-like range from 4 m to 6 m without changing ray count. | Longer range helps in the bigger arena while preserving the 30-D observation size for checkpoint compatibility. |
 | Corner stability | Increase useful turning near walls and obstacles. | The rover was observed turning too slowly around obstacle corners and hitting walls. |
+| Controlled exploration | Reset the city policy action std from about 20 to 0.30 before continuing. | The policy reward improved, but action sampling remained too noisy for smooth sim-to-real behavior. |
 | Camera sensors | Delay raw RTX camera training. | First stabilize locomotion/control; then add high-dimensional perception after the policy is reliable. |
 | Recording | Record focused training videos every 10000 frames. | Videos make it easier to diagnose path quality, reverse behavior, collisions, and goal reaching. |
 
@@ -245,6 +259,7 @@ This journal captures the useful engineering discussion behind the current robot
 | Wider arena | The city arena was expanded from `7 x 5 m` to `10 x 7 m` to give more realistic delivery paths. | Current city arena is `10 x 7 m`. |
 | LiDAR scope | Increasing LiDAR ray count would change observation size and break checkpoint compatibility. Increasing range keeps the shape compatible. | City LiDAR-like range is `6 m`, still `16` rays. |
 | Corner/wall behavior | Simulation review showed the rover sometimes turned too slowly near obstacle corners and hit boundary walls. Reverse should be allowed when it helps find a shorter safe path. | Next run increases useful city yaw authority, reduces wasted yaw punishment near danger, strengthens wall avoidance, and credits reverse progress. |
+| Exploration control | After the corner-stability run, mean reward improved to `134.54`, but entropy stayed near `8.79` and mean action std stayed near `20.02`. | A low-std checkpoint was created from `model_7146.pt` with std `[0.30, 0.30]`, entropy coefficient `0.0005`, and learning rate `5e-5` for the next 2000 iterations. |
 | Cameras and full LiDAR | Raw RTX cameras and full LiDAR are important, but should come after stable low-dimensional control. | Planned next perception stage. |
 | Video recording | Training video should focus on one environment and follow/orbit/zoom around the robot/path. | Video recording is enabled every `10000` frames. |
 | GitHub workflow | The workspace should be pushed directly to the project repository, with README as the living documentation. | Main branch is updated with training code and notes. |
