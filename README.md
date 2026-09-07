@@ -275,6 +275,49 @@ action_std:           19.90
 mean_episode_length:  406.50
 ```
 
+Low-exploration fine-tuning snapshot:
+
+```text
+run:                       2026-09-07_13-04-44
+iteration:                 7925 / 9146
+mean_reward_start:         1.30
+mean_reward_current:       120.10
+mean_reward_recent_avg20:  128.82
+mean_reward_best:          150.28 at iteration 7599
+episode_length_start:      15.60
+episode_length_current:    441.01
+episode_length_recent_avg20: 461.26
+episode_length_best:       514.91 at iteration 7599
+entropy_start:             0.430
+entropy_current:           0.420
+action_std_start:          0.300
+action_std_current:        0.298
+```
+
+Interpretation: low-exploration fine-tuning is improving stability. Reward and episode length rose strongly while entropy and action standard deviation stayed controlled, which should produce smoother and more repeatable rover behavior.
+
+Late low-exploration progress snapshot:
+
+```text
+run:                         2026-09-07_13-04-44
+iteration:                   9036 / 9146
+iterations_remaining:        110
+mean_reward_current:         122.64
+mean_reward_recent_avg20:    128.19
+mean_reward_best:            150.28 at iteration 7599
+episode_length_current:      443.64
+episode_length_recent_avg20: 460.81
+episode_length_best:         517.82 at iteration 8193
+entropy_current:             0.343
+entropy_recent_avg20:        0.344
+action_std_current:          0.287
+action_std_recent_avg20:     0.287
+fps_current:                 938
+fps_recent_avg20:            976.70
+```
+
+Resume note: let the run finish to `9146`, then compare the final checkpoint against the strongest candidates around reward iteration `7599` and episode-length iteration `8193`. The best deployment candidate may be the smoothest safe-driving checkpoint, not necessarily the last checkpoint.
+
 ## Original Raspberry Pi Robot Code
 
 This repository also contains the Waveshare Raspberry Pi control stack for the physical UGV Rover, including Flask control UI, camera streaming, pan-tilt control, OpenCV examples, and tutorial notebooks. That code is useful for the final hardware bridge after simulation policies are ready.
