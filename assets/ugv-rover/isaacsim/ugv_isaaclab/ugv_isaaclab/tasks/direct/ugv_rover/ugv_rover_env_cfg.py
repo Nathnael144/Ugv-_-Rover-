@@ -142,6 +142,9 @@ class UGVRoverCityEnvCfg(UGVRoverEmptyEnvCfg):
 
     # Keep the observation/action sizes identical to the empty-space task so we
     # can warm-start from the preserved empty-space sim-to-real checkpoint.
+    arena_length_m = 10.0
+    arena_width_m = 7.0
+    lidar_max_range_m = 6.0
     min_goal_distance_m = 1.25
 
     # Building blocks and parked cars. Leave street corridors open for delivery navigation.
