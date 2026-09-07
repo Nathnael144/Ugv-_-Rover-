@@ -49,7 +49,7 @@ Isaac-UGV-Rover-City-v0
 
 The empty environment is a 7 x 5 m rectangular arena with a circular goal marker. When the rover reaches the goal, a new goal is sampled so training continues without restarting the whole run.
 
-The city environment keeps the same policy shape but adds static obstacles and delivery-road visuals: black asphalt, lane markings, sidewalks, building-like blocks, parked cars, and boundary walls. This lets the policy continue from the empty-space checkpoint while learning obstacle clearance.
+The city environment keeps the same policy shape but adds static obstacles and delivery-road visuals: black asphalt, lane markings, sidewalks, building-like blocks, parked cars, and boundary walls. The current city stage is 10 x 7 m with the same obstacle layout and a longer LiDAR-like range. This lets the policy continue from the empty-space checkpoint while learning obstacle clearance in a wider delivery space.
 
 ## RL Formulation
 
@@ -95,6 +95,44 @@ avoiding termination
 ```
 
 The city task increases the goal reward and obstacle penalty so the rover learns delivery navigation without cutting through static objects.
+
+## Reward And Penalty Values
+
+The empty task and city task use the same reward structure. The city task overrides several values to make delivery navigation stricter around obstacles.
+
+| Term | Empty value | City value | Purpose |
+| --- | ---: | ---: | --- |
+| `rew_alive` | `0.02` | `0.02` | Small reward for staying active each step. |
+| `rew_progress` | `4.0` | `4.5` | Reward for reducing distance to the goal. |
+| `rew_goal` | `5.0` | `6.0` | Bonus when the rover reaches the circular goal marker. |
+| `rew_heading` | `0.15` | `0.15` | Reward for pointing the robot front toward the goal. |
+| `rew_forward_velocity` | `0.20` | `0.28` | Encourages forward motion as the normal driving mode. |
+| `rew_reverse_action` | `-0.25` | `-0.35` | Penalizes reverse so it is not the default strategy. |
+| `rew_yaw_rate` | `-0.015` | `-0.02` | Penalizes excessive spinning or sharp yaw motion. |
+| `rew_unneeded_turn` | `-0.04` | `-0.06` | Penalizes turning when already facing the goal. |
+| `rew_action_rate` | `-0.03` | `-0.03` | Penalizes sudden action changes for smoother driving. |
+| `rew_action_mag` | `-0.01` | `-0.01` | Penalizes unnecessarily large commands. |
+| `rew_wall_margin` | `-0.25` | `-0.25` | Penalizes getting too close to boundary walls. |
+| `rew_obstacle_margin` | `-0.35` | `-0.60` | Penalizes getting too close to city obstacles. |
+| `rew_terminated` | `-3.0` | `-4.0` | Penalty for collision, leaving the arena, or tipping. |
+
+Reverse is still allowed. The policy action can command negative linear velocity, but reverse receives a penalty. Near an obstacle, the reverse penalty is reduced so the robot can back out when that is the safest maneuver. This should teach: drive forward and turn smoothly when possible, reverse only when useful for obstacle avoidance.
+
+Current city geometry and perception values:
+
+| Setting | Value |
+| --- | ---: |
+| City arena length | `10.0 m` |
+| City arena width | `7.0 m` |
+| Empty arena length | `7.0 m` |
+| Empty arena width | `5.0 m` |
+| LiDAR-like rays | `16` |
+| Empty LiDAR-like range | `4.0 m` |
+| City LiDAR-like range | `6.0 m` |
+| Goal reached radius | `0.25 m` |
+| Obstacle safety margin | `0.28 m` |
+| Max linear speed | `1.0 m/s` |
+| Max angular speed | `2.0 rad/s` |
 
 ## Pretraining
 
@@ -163,6 +201,26 @@ add domain randomization for lighting, friction, mass, and obstacle placement
 compare low-dimensional policy against vision/LiDAR policy
 test the preserved empty-space checkpoint on real hardware
 ```
+
+## Training Decision Log
+
+These notes record the important project decisions so future training changes have context.
+
+| Stage | Decision | Reason |
+| --- | --- | --- |
+| CAD import | Keep the original CAD/USD visual model intact. | The visible robot should match the real hardware; physics is added around the CAD rather than replacing it. |
+| Wheel physics | Use four motor-driven wheels and passive middle wheels. | The real rover drives front/rear wheels; middle wheels should rotate through contact and friction. |
+| Front direction | Keep the corrected robot front/camera direction from the working setup. | Policy observations and heading reward must match the real robot front for sim-to-real transfer. |
+| Teleoperation dataset | Collect simple-environment driving data before RL. | Behavior cloning gives PPO a warmer start than random exploration. |
+| BC pretraining | Use the same observation/action format as the Isaac Lab task. | Matching shapes lets the pretrained policy load into PPO cleanly. |
+| Empty arena | Train first in a 7 x 5 m rectangular arena. | This isolates basic drive, turning, goal seeking, and wall avoidance before adding city complexity. |
+| Empty checkpoint | Preserve the empty-space checkpoint separately. | It remains a sim-to-real baseline for hardware tests in a simple open space. |
+| City arena | Add static city-like obstacles, asphalt, sidewalks, lane markings, buildings, and parked cars. | Delivery robots need obstacle-aware navigation in structured outdoor spaces. |
+| Reward shaping | Add forward-motion and smooth-turn preference while keeping reverse available. | The robot was using reverse too often; reverse should remain an escape behavior, not the main strategy. |
+| Wider city | Expand the city training area to 10 x 7 m. | A wider arena gives more realistic delivery paths and avoids overfitting to a small box. |
+| LiDAR range | Increase city LiDAR-like range from 4 m to 6 m without changing ray count. | Longer range helps in the bigger arena while preserving the 30-D observation size for checkpoint compatibility. |
+| Camera sensors | Delay raw RTX camera training. | First stabilize locomotion/control; then add high-dimensional perception after the policy is reliable. |
+| Recording | Record focused training videos every 10000 frames. | Videos make it easier to diagnose path quality, reverse behavior, collisions, and goal reaching. |
 
 ## Original Raspberry Pi Robot Code
 
