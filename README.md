@@ -222,6 +222,40 @@ These notes record the important project decisions so future training changes ha
 | Camera sensors | Delay raw RTX camera training. | First stabilize locomotion/control; then add high-dimensional perception after the policy is reliable. |
 | Recording | Record focused training videos every 10000 frames. | Videos make it easier to diagnose path quality, reverse behavior, collisions, and goal reaching. |
 
+## Conversation And Training Journal
+
+This journal captures the useful engineering discussion behind the current robot-training setup. It intentionally excludes credentials, passwords, and local account details.
+
+| Topic | What we learned or decided | Current status |
+| --- | --- | --- |
+| CAD and physics | The original CAD/USD model should remain visually unchanged. Physics, mass, inertia, collision, and joints are layered around it for simulation. | Preserved in Isaac Sim assets. |
+| Wheel model | The rover has six visible CAD wheels, but only four should be motor-driven. The middle wheels are passive and should rotate through contact/friction. | Isaac Lab actuator group drives front/rear wheels only. |
+| Front direction | The robot front/camera side had to match the corrected user-observed direction. A temporary flip was rejected and reverted. | `front_yaw_offset_rad = pi`, `linear_drive_sign = -1.0`. |
+| Smooth motion | Raw velocity commands made the robot movement too abrupt, so the controller and RL reward were shaped for smoother driving. | Action-rate, yaw-rate, and unneeded-turn penalties are active. |
+| Reverse behavior | Reverse should not be the main navigation strategy, but it must remain available for obstacle escape. | Reverse is allowed but penalized; penalty is reduced near obstacles. |
+| Dataset collection | Teleoperation data is useful before RL because it gives the policy a behavior-cloning warm start. | BC policy is included for PPO warm start. |
+| Empty-space training | The first RL stage used a simple rectangular arena to learn basic navigation before city complexity. | Empty-space checkpoint is preserved for sim-to-real testing. |
+| City training | The next stage uses static city-like obstacles with asphalt, sidewalks, lane markings, buildings, and parked cars. | Active task: `Isaac-UGV-Rover-City-v0`. |
+| Goal marker | The robot needs a visible target and should receive a new goal after reaching it. | Circular goal marker and resampling are active. |
+| Shortest safe path | Short paths are encouraged through progress reward, goal bonus, and penalties for wasted motion. Obstacles/walls make it shortest safe path, not just straight-line path. | Reward design supports this. |
+| Termination | Failure termination happens for leaving the arena, hitting/getting too close to obstacles, or tipping. Timeout reset is not treated as failure. | City termination penalty is `-4.0`. |
+| Wider arena | The city arena was expanded from `7 x 5 m` to `10 x 7 m` to give more realistic delivery paths. | Current city arena is `10 x 7 m`. |
+| LiDAR scope | Increasing LiDAR ray count would change observation size and break checkpoint compatibility. Increasing range keeps the shape compatible. | City LiDAR-like range is `6 m`, still `16` rays. |
+| Cameras and full LiDAR | Raw RTX cameras and full LiDAR are important, but should come after stable low-dimensional control. | Planned next perception stage. |
+| Video recording | Training video should focus on one environment and follow/orbit/zoom around the robot/path. | Video recording is enabled every `10000` frames. |
+| GitHub workflow | The workspace should be pushed directly to the project repository, with README as the living documentation. | Main branch is updated with training code and notes. |
+
+Latest observed training snapshot for the `10 x 7 m` city continuation:
+
+```text
+run:                  2026-09-07_10-33-31
+iteration:            5815 / 6148
+mean_reward:          45.65
+entropy_loss:         8.67
+action_std:           18.77
+mean_episode_length:  412.20
+```
+
 ## Original Raspberry Pi Robot Code
 
 This repository also contains the Waveshare Raspberry Pi control stack for the physical UGV Rover, including Flask control UI, camera streaming, pan-tilt control, OpenCV examples, and tutorial notebooks. That code is useful for the final hardware bridge after simulation policies are ready.
