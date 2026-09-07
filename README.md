@@ -96,6 +96,20 @@ avoiding termination
 
 The city task increases the goal reward and obstacle penalty so the rover learns delivery navigation without cutting through static objects.
 
+## Training Metrics
+
+Custom outcome metrics are logged to TensorBoard under `Metrics/...` as reset-batch percentages. These are intended for judging safety and task success more directly than reward alone.
+
+| Metric | Meaning |
+| --- | --- |
+| `Metrics/collision_rate_percent` | Percent of reset episodes that ended by hitting a wall or obstacle. |
+| `Metrics/goal_reach_rate_percent` | Percent of reset episodes that reached at least one goal before reset. |
+| `Metrics/wall_hit_rate_percent` | Percent of reset episodes that ended by crossing/hitting the arena wall boundary. |
+| `Metrics/obstacle_hit_rate_percent` | Percent of reset episodes that ended too close to a static city obstacle. |
+| `Metrics/timeout_rate_percent` | Percent of reset episodes that reached the episode time limit instead of failing early. |
+
+Goal reaching does not immediately reset the episode; the circular goal marker is resampled and training continues. Therefore `goal_reach_rate_percent` means the episode reached one or more goals before it eventually reset.
+
 ## Reward And Penalty Values
 
 The empty task and city task use the same reward structure. The city task overrides several values to make delivery navigation stricter around obstacles.

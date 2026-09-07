@@ -38,6 +38,11 @@ class UGVRoverEmptyEnv(DirectRLEnv):
         self._previous_actions = torch.zeros_like(self._actions)
         self._goal_xy = torch.zeros((self.num_envs, 2), device=self.device)
         self._previous_goal_distance = torch.zeros(self.num_envs, device=self.device)
+        self._episode_goal_reached = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._last_wall_hit = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._last_obstacle_hit = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._last_collision = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._last_timeout = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
 
         ray_angles = torch.linspace(-math.pi, math.pi, self.cfg.lidar_num_rays + 1, device=self.device)[:-1]
         self._lidar_ray_angles = ray_angles
@@ -298,6 +303,7 @@ class UGVRoverEmptyEnv(DirectRLEnv):
             + self.cfg.rew_terminated * self.reset_terminated.float()
         )
         if torch.any(reached):
+            self._episode_goal_reached |= reached
             reached_ids = reached.nonzero(as_tuple=False).squeeze(-1)
             self._sample_goals(reached_ids, root_xy[reached_ids])
         return reward
@@ -312,14 +318,21 @@ class UGVRoverEmptyEnv(DirectRLEnv):
         hit_obstacle = self._obstacle_margin(root_xy) < 0.12
         tipped = (torch.abs(roll) > 0.75) | (torch.abs(pitch) > 0.75)
         time_out = self.episode_length_buf >= self.max_episode_length
+
+        self._last_wall_hit[:] = out_of_arena
+        self._last_obstacle_hit[:] = hit_obstacle
+        self._last_collision[:] = out_of_arena | hit_obstacle
+        self._last_timeout[:] = time_out
         return out_of_arena | hit_obstacle | tipped, time_out
 
     def _reset_idx(self, env_ids: Sequence[int] | None) -> None:
         if env_ids is None:
             env_ids = self.robot._ALL_INDICES
+        env_ids_t = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
+        self._log_episode_outcome_metrics(env_ids_t)
+
         super()._reset_idx(env_ids)
 
-        env_ids_t = torch.as_tensor(env_ids, device=self.device, dtype=torch.long)
         num_resets = len(env_ids_t)
         spawn_xy = self._sample_spawn_points(num_resets)
         yaw = sample_uniform(-math.pi, math.pi, (num_resets,), self.device)
@@ -337,11 +350,25 @@ class UGVRoverEmptyEnv(DirectRLEnv):
 
         self._actions[env_ids_t] = 0.0
         self._previous_actions[env_ids_t] = 0.0
+        self._episode_goal_reached[env_ids_t] = False
 
         self.robot.write_root_pose_to_sim_index(root_pose=root_pose, env_ids=env_ids_t)
         self.robot.write_root_velocity_to_sim_index(root_velocity=root_vel, env_ids=env_ids_t)
         self.robot.write_joint_position_to_sim_index(position=joint_pos, env_ids=env_ids_t)
         self.robot.write_joint_velocity_to_sim_index(velocity=joint_vel, env_ids=env_ids_t)
+
+    def _log_episode_outcome_metrics(self, env_ids_t: torch.Tensor) -> None:
+        """Log reset-batch episode outcomes as TensorBoard percentages."""
+        if len(env_ids_t) == 0:
+            return
+
+        log = self.extras.setdefault("log", {})
+        scale = 100.0
+        log["Metrics/collision_rate_percent"] = self._last_collision[env_ids_t].float().mean().item() * scale
+        log["Metrics/goal_reach_rate_percent"] = self._episode_goal_reached[env_ids_t].float().mean().item() * scale
+        log["Metrics/wall_hit_rate_percent"] = self._last_wall_hit[env_ids_t].float().mean().item() * scale
+        log["Metrics/obstacle_hit_rate_percent"] = self._last_obstacle_hit[env_ids_t].float().mean().item() * scale
+        log["Metrics/timeout_rate_percent"] = self._last_timeout[env_ids_t].float().mean().item() * scale
 
     def _sample_goals(self, env_ids_t: torch.Tensor, avoid_xy: torch.Tensor) -> None:
         """Sample reachable goal points and refresh the visual target markers."""
